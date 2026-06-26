@@ -16,6 +16,7 @@ export const SubscriptionsProvider = ({ children }) => {
       setSubscriptions([]);
       setLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const loadSubscriptions = async () => {

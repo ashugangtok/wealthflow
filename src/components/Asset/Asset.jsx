@@ -34,6 +34,7 @@ const Asset = () => {
     if (user) {
       fetchAssets();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const fetchAssets = async () => {

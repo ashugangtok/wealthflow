@@ -16,6 +16,7 @@ export const GoalsProvider = ({ children }) => {
       setGoals([]);
       setLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const loadGoals = async () => {

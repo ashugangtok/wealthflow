@@ -5,6 +5,14 @@ const NotificationsContext = createContext();
 export const NotificationsProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([]);
 
+  const markAsRead = useCallback((id) => {
+    setNotifications((prev) =>
+      prev.map((notif) =>
+        notif.id === id ? { ...notif, read: true } : notif
+      )
+    );
+  }, []);
+
   const addNotification = useCallback((message, type = 'info', duration = 5000) => {
     const id = Date.now();
     const notification = {
@@ -25,15 +33,7 @@ export const NotificationsProvider = ({ children }) => {
     }
 
     return id;
-  }, []);
-
-  const markAsRead = useCallback((id) => {
-    setNotifications((prev) =>
-      prev.map((notif) =>
-        notif.id === id ? { ...notif, read: true } : notif
-      )
-    );
-  }, []);
+  }, [markAsRead]);
 
   const clearNotification = useCallback((id) => {
     setNotifications((prev) => prev.filter((notif) => notif.id !== id));

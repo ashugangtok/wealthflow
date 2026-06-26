@@ -8,7 +8,6 @@ import {
   where,
   orderBy,
   getDocs,
-  getDoc,
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
 

@@ -12,13 +12,10 @@ import {
   CircularProgress,
   Typography,
 } from '@mui/material';
-import { useAuth } from '../../context/AuthContext';
 import { useBankAccounts } from '../../context/BankAccountsContext';
 import { useNotifications } from '../../context/NotificationsContext';
-import { formatCurrency } from '../../utils/calculations';
 
 const BillPaymentForm = ({ open, onClose, onSuccess, bill }) => {
-  const { user } = useAuth();
   const { accounts, updateAccountBalance } = useBankAccounts();
   const { addNotification } = useNotifications();
   const [formData, setFormData] = useState({
