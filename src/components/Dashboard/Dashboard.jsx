@@ -4,10 +4,9 @@ import { TrendingUp, CreditCard, AccountBalance, Wallet, Savings } from '@mui/ic
 import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { useBills } from '../../context/BillsContext';
 import { useBudgets } from '../../context/BudgetsContext';
 import { getAllIncome, getAllExpenses, getAllCreditCards, getAllBankAccounts, getAllAssets, getAllLiabilities, getAllBills } from '../../utils/firebaseHelpers';
-import { calculateNetWorth, calculateTotalAssets, calculateTotalLiabilities, calculateMonthlyIncome, calculateMonthlyExpenses, calculateUpcomingDuePayments, calculateEMIPayments, formatCurrency, calculateMonthlyTrend, getExpensesByCategory } from '../../utils/calculations';
+import { calculateNetWorth, calculateTotalAssets, calculateTotalLiabilities, calculateMonthlyIncome, calculateMonthlyExpenses, formatCurrency, calculateMonthlyTrend, getExpensesByCategory } from '../../utils/calculations';
 import { ensureDate } from '../../utils/dateHelpers';
 import SavingsGoalsWidget from '../Goals/SavingsGoalsWidget.jsx';
 import { useQuickActions } from '../../context/QuickActionsContext';
