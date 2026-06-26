@@ -39,6 +39,7 @@ const Expense = () => {
     if (user) {
       fetchExpenses();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const fetchExpenses = async () => {

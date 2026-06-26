@@ -22,7 +22,7 @@ import {
   TrendingUp as IncomeIcon,
   ShoppingCart as ExpenseIcon,
   CreditCard as CreditCardIcon,
-  AccountBalance as BankIcon,
+  
   Home as AssetIcon,
   AttachMoney as LiabilityIcon,
   Assessment as ReportIcon,
@@ -42,7 +42,6 @@ import {
 import ListItemButton from '@mui/material/ListItemButton';
 import { useAuth } from '../../context/AuthContext';
 import { useNotifications } from '../../context/NotificationsContext';
-import QuickAddButton from '../QuickAdd/QuickAddButton.jsx';
 import FloatingActionMenu from '../FloatingActionMenu/FloatingActionMenu.jsx';
 
 const DRAWER_WIDTH = 280;

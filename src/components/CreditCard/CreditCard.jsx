@@ -6,7 +6,7 @@ import {
   Card,
   CardContent,
   Typography,
-  Dialog,
+  
   CircularProgress,
   Alert,
   LinearProgress,
@@ -34,6 +34,7 @@ const CreditCard = () => {
     if (user) {
       fetchCreditCards();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const fetchCreditCards = async () => {

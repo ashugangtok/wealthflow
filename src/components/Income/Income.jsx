@@ -9,7 +9,7 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Dialog,
+  
   CircularProgress,
   Alert,
   Typography,
@@ -36,6 +36,7 @@ const Income = () => {
     if (user) {
       fetchIncome();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const fetchIncome = async () => {

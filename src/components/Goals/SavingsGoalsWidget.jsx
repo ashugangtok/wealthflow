@@ -44,7 +44,6 @@ export const SavingsGoalsWidget = () => {
         {goals && goals.length > 0 ? (
           topGoals.map((goal) => {
           const percentage = getProgressPercentage(goal.currentAmount, goal.targetAmount);
-          const remaining = goal.targetAmount - goal.currentAmount;
 
           return (
             <div key={goal.id} className="p-4 rounded-3xl bg-white/5 border border-white/10 hover:border-white/20 transition-all">

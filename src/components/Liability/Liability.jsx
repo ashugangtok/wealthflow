@@ -37,6 +37,7 @@ const Liability = () => {
     if (user) {
       fetchLiabilities();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const fetchLiabilities = async () => {

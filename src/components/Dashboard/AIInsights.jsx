@@ -62,7 +62,7 @@ export const AIInsights = ({ expenses = [], budgets = [], monthlyIncome = 0 }) =
         icon: Target,
         title: '💡 Savings Opportunity',
         message: `You're saving ${savingsRate}% of income. Target 20%+ for financial growth`,
-        action: 'Cut expenses by ₹${(monthlyIncome * 0.2 - (monthlyIncome - totalExpenses)).toFixed(0)} to reach 20%',
+        action: `Cut expenses by ₹${Math.max(0, monthlyIncome * 0.2 - (monthlyIncome - totalExpenses)).toFixed(0)} to reach 20%`,
       });
     }
 

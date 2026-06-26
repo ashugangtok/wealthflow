@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Grid, Card, CardContent, CardHeader, CircularProgress, Alert, Typography, Button, Stack, LinearProgress, Chip, Container, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
-import { TrendingUp, TrendingDown, CreditCard, AccountBalance, Add, ArrowRight, Wallet, ShowChart, Analytics, AutoGraph, LocalAtm, Savings, AttachMoney } from '@mui/icons-material';
-import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { Box, Grid, Card, CardContent, CardHeader, CircularProgress, Alert, Typography, Button, Stack, LinearProgress, Container, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
+import { TrendingUp, CreditCard, AccountBalance, Wallet, Savings } from '@mui/icons-material';
+import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useBills } from '../../context/BillsContext';
@@ -41,7 +41,6 @@ const Dashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { openModal, closeModal } = useQuickActions();
-  const { bills } = useBills();
   const { budgets } = useBudgets();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -50,6 +49,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchDashboardData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const fetchDashboardData = async () => {
@@ -74,8 +74,6 @@ const Dashboard = () => {
   const monthlyIncome = calculateMonthlyIncome(data.income);
   const monthlyExpenses = calculateMonthlyExpenses(data.expenses);
   const totalBankBalance = data.bankAccounts.reduce((sum, acc) => sum + (acc.balance || 0), 0);
-  const upcomingPayments = calculateUpcomingDuePayments(data.creditCards);
-  const upcomingEMIs = calculateEMIPayments(data.liabilities);
   const savingsRate = monthlyIncome > 0 ? (monthlyIncome - monthlyExpenses) / monthlyIncome : 0;
   const chartData = calculateMonthlyTrend(data.income, data.expenses);
   const expenseCategoryObj = getExpensesByCategory(data.expenses);

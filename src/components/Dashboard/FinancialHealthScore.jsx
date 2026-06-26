@@ -45,7 +45,7 @@ export const FinancialHealthScore = ({
       <div className="flex items-center gap-8 mb-8">
         {/* Score Circle */}
         <div className="flex-shrink-0">
-          <div className="w-32 h-32 rounded-full bg-gradient-to-r {getScoreColor(overallScore)} p-1">
+          <div className={`w-32 h-32 rounded-full bg-gradient-to-r ${getScoreColor(overallScore)} p-1`}>
             <div className="w-full h-full rounded-full bg-card flex items-center justify-center">
               <div className="text-center">
                 <div className="text-4xl font-bold text-white">{overallScore}</div>
