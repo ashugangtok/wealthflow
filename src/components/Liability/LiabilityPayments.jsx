@@ -15,7 +15,6 @@ import {
   CircularProgress,
 } from '@mui/material';
 import { useAuth } from '../../context/AuthContext';
-import { formatCurrency } from '../../utils/calculations';
 
 const LiabilityPayments = () => {
   const { user } = useAuth();

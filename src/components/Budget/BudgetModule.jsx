@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { TrendingDown, Plus, Edit2, Trash2 } from 'lucide-react';
 import { useBudgets } from '../../context/BudgetsContext';
 import { useNotifications } from '../../context/NotificationsContext';

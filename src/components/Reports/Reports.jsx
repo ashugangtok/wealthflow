@@ -14,8 +14,6 @@ import {
 import {
   LineChart,
   Line,
-  BarChart,
-  Bar,
   PieChart,
   Pie,
   Cell,
@@ -28,7 +26,7 @@ import {
 } from 'recharts';
 import { useAuth } from '../../context/AuthContext';
 import { getAllIncome, getAllExpenses, getAllAssets, getAllLiabilities, getAllCreditCards, getAllBankAccounts } from '../../utils/firebaseHelpers';
-import { calculateMonthlyTrend, getExpensesByCategory, getIncomeByCategory, calculateNetWorth, calculateTotalAssets, calculateTotalLiabilities } from '../../utils/calculations';
+import { calculateMonthlyTrend, getExpensesByCategory, getIncomeByCategory } from '../../utils/calculations';
 import { ensureDate } from '../../utils/dateHelpers';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D', '#FFC658', '#FF7C7C'];
@@ -56,6 +54,7 @@ const Reports = () => {
     if (user) {
       fetchReportData();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const fetchReportData = async () => {

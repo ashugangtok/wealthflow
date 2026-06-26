@@ -11,7 +11,6 @@ import {
   Alert,
   CircularProgress,
 } from '@mui/material';
-import { useAuth } from '../../context/AuthContext';
 import { useNotifications } from '../../context/NotificationsContext';
 import { useBills } from '../../context/BillsContext';
 import { parseDateString, formatDateString, ensureDate } from '../../utils/dateHelpers';
@@ -30,7 +29,6 @@ const BILL_CATEGORIES = [
 ];
 
 const BillsForm = ({ open, onClose, onSuccess, editingData, editingId }) => {
-  const { user } = useAuth();
   const { addNewBill, updateBillItem } = useBills();
   const { addNotification } = useNotifications();
   const [formData, setFormData] = useState({

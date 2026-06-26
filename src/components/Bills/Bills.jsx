@@ -4,7 +4,6 @@ import {
   Button,
   Card,
   CardContent,
-  CardHeader,
   Table,
   TableBody,
   TableCell,
@@ -23,7 +22,6 @@ import {
   Tab,
 } from '@mui/material';
 import { Edit, Delete, Add } from '@mui/icons-material';
-import { useAuth } from '../../context/AuthContext';
 import { useBills } from '../../context/BillsContext';
 import { useNotifications } from '../../context/NotificationsContext';
 import { ensureDate } from '../../utils/dateHelpers';
@@ -31,7 +29,6 @@ import BillsForm from './BillsForm';
 import BillPaymentForm from './BillPaymentForm';
 
 const Bills = () => {
-  const { user } = useAuth();
   const { bills, deleteBillItem, fetchBills } = useBills();
   const { addNotification } = useNotifications();
   const [openForm, setOpenForm] = useState(false);
