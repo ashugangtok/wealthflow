@@ -16,6 +16,7 @@ export const BudgetsProvider = ({ children }) => {
       setBudgets([]);
       setLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const loadBudgets = async () => {
