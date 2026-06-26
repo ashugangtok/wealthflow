@@ -1,0 +1,58 @@
+{
+  "name": "personal-finance-app",
+  "version": "1.0.0",
+  "description": "A comprehensive personal finance tracking web application",
+  "private": true,
+  "dependencies": {
+    "@emotion/react": "^11.11.0",
+    "@emotion/styled": "^11.11.0",
+    "@mui/icons-material": "^5.14.0",
+    "@mui/lab": "^5.0.0-alpha.61",
+    "@mui/material": "^5.14.0",
+    "axios": "^1.6.0",
+    "clsx": "^2.0.0",
+    "date-fns": "^2.30.0",
+    "firebase": "^10.7.0",
+    "framer-motion": "^12.41.0",
+    "lodash": "^4.17.21",
+    "lucide-react": "^1.21.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-query": "^3.39.3",
+    "react-router-dom": "^6.20.0",
+    "recharts": "^2.10.0",
+    "tailwindcss-animate": "^1.0.7",
+    "zod": "^4.4.3",
+    "zustand": "^5.0.14"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "react-scripts": "5.0.1"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "deploy": "firebase deploy"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}

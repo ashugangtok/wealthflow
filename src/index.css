@@ -1,0 +1,154 @@
+/* Tailwind CSS */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* WEALTHFLOW - Global Styles */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  /* WEALTHFLOW Color Palette */
+  --background: #09090B;
+  --card: #111827;
+  --primary: #7C3AED;
+  --secondary: #06B6D4;
+  --success: #10B981;
+  --warning: #F59E0B;
+  --danger: #EF4444;
+}
+
+html {
+  background: var(--background);
+  color: white;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(135deg, #09090B 0%, #111827 100%);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu',
+    'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: white;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--primary);
+  border-radius: 10px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--secondary);
+}
+
+/* Smooth Transitions */
+* {
+  transition: all 0.3s ease;
+}
+
+/* Selection Color */
+::selection {
+  background: var(--primary);
+  color: white;
+}
+
+/* Input Styling */
+input, textarea, select {
+  background: var(--card);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  font-family: inherit;
+}
+
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+}
+
+/* Button Styling */
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+/* Links */
+a {
+  color: var(--primary);
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+a:hover {
+  color: var(--secondary);
+}
+
+/* Remove default appearances */
+button, input[type="button"], input[type="submit"] {
+  border: none;
+  background: none;
+}
+
+/* MUI Overrides for Dark Mode */
+.MuiPaper-root {
+  background-color: var(--card) !important;
+  color: white !important;
+}
+
+.MuiAppBar-root {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%) !important;
+}
+
+.MuiTableCell-head {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.MuiTableCell-body {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  color: white !important;
+}
+
+.MuiDialog-paper {
+  background-color: var(--card) !important;
+}
+
+.MuiOutlinedInput-root {
+  color: white !important;
+}
+
+.MuiOutlinedInput-notchedOutline {
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: var(--primary) !important;
+}
