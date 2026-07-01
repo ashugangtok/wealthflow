@@ -22,7 +22,7 @@ import {
   TrendingUp as IncomeIcon,
   ShoppingCart as ExpenseIcon,
   CreditCard as CreditCardIcon,
-  
+
   Home as AssetIcon,
   AttachMoney as LiabilityIcon,
   Assessment as ReportIcon,
@@ -202,7 +202,7 @@ const Layout = () => {
           </IconButton>
           {/* Mobile: Show logo icon, Desktop: Hide (sidebar branding shows) */}
           <Box sx={{ display: { xs: 'flex', sm: 'none' }, alignItems: 'center', gap: 1, flex: 1 }}>
-            <Wallet sx={{ fontSize: 24 }} />
+            <TransactionIcon sx={{ fontSize: 24 }} />
             <Typography variant="h6" sx={{ fontWeight: 700 }}>WEALTHFLOW</Typography>
           </Box>
           <Box sx={{ display: { xs: 'none', sm: 'flex' }, flex: 1 }} />

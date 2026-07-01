@@ -25,7 +25,6 @@ import { Edit, Delete, Add } from '@mui/icons-material';
 import { useAuth } from '../../context/AuthContext';
 import { useBills } from '../../context/BillsContext';
 import { useCreditCards } from '../../context/CreditCardsContext';
-import { useGoals } from '../../context/GoalsContext';
 import { useNotifications } from '../../context/NotificationsContext';
 import { ensureDate } from '../../utils/dateHelpers';
 import { getAllLiabilityPayments, getAllLiabilities } from '../../utils/firebaseHelpers';
@@ -231,7 +230,6 @@ const Bills = () => {
 
   const upcomingBills = getUpcomingBills();
   const pastBills = getPastBills();
-  const totalUpcoming = upcomingBills.reduce((sum, b) => sum + (b.amount || 0), 0);
 
   return (
     <Box sx={{ background: 'linear-gradient(135deg, #0f0f23 0%, #1a1a3e 100%)', minHeight: '100vh', p: 4, pt: 8 }}>
