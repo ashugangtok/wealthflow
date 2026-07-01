@@ -19,6 +19,8 @@ import {
 } from '@mui/material';
 import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { useAuth } from '../../context/AuthContext';
+import { useBankAccounts } from '../../context/BankAccountsContext';
+import { useCreditCards } from '../../context/CreditCardsContext';
 import { getAllExpenses, deleteExpense } from '../../utils/firebaseHelpers';
 import { formatCurrency, getExpensesByCategory } from '../../utils/calculations';
 import { ensureDate } from '../../utils/dateHelpers';
@@ -27,6 +29,8 @@ import ExpenseSummary from './ExpenseSummary';
 
 const Expense = () => {
   const { user } = useAuth();
+  const { updateAccountBalance, getAccountById } = useBankAccounts();
+  const { updateOutstandingBalance, getCardById } = useCreditCards();
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -73,7 +77,26 @@ const Expense = () => {
     if (!window.confirm('Are you sure you want to delete this expense?')) return;
 
     try {
+      const expenseToDelete = expenses.find((item) => item.id === id);
       await deleteExpense(user.uid, id);
+
+      // Reverse account balance when deleting expense
+      if (expenseToDelete) {
+        if (expenseToDelete.paymentSource === 'bank' && expenseToDelete.accountId) {
+          const account = getAccountById(expenseToDelete.accountId);
+          if (account) {
+            const newBalance = account.balance + expenseToDelete.amount;
+            await updateAccountBalance(expenseToDelete.accountId, newBalance);
+          }
+        } else if (expenseToDelete.paymentSource === 'creditCard' && expenseToDelete.creditCardId) {
+          const card = getCardById(expenseToDelete.creditCardId);
+          if (card) {
+            const newOutstanding = card.outstandingBalance - expenseToDelete.amount;
+            await updateOutstandingBalance(expenseToDelete.creditCardId, newOutstanding);
+          }
+        }
+      }
+
       setExpenses(expenses.filter((item) => item.id !== id));
     } catch (err) {
       setError('Failed to delete expense');

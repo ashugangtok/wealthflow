@@ -18,6 +18,7 @@ import {
 } from '@mui/material';
 import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { useAuth } from '../../context/AuthContext';
+import { useBankAccounts } from '../../context/BankAccountsContext';
 import { getAllIncome, deleteIncome } from '../../utils/firebaseHelpers';
 import { formatCurrency } from '../../utils/calculations';
 import { ensureDate } from '../../utils/dateHelpers';
@@ -25,6 +26,7 @@ import IncomeForm from './IncomeForm';
 
 const Income = () => {
   const { user } = useAuth();
+  const { updateAccountBalance, getAccountById } = useBankAccounts();
   const [income, setIncome] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -70,7 +72,18 @@ const Income = () => {
     if (!window.confirm('Are you sure you want to delete this income?')) return;
 
     try {
+      const incomeToDelete = income.find((item) => item.id === id);
       await deleteIncome(user.uid, id);
+
+      // Reverse account balance when deleting income
+      if (incomeToDelete && incomeToDelete.accountId) {
+        const account = getAccountById(incomeToDelete.accountId);
+        if (account) {
+          const newBalance = account.balance - incomeToDelete.amount;
+          await updateAccountBalance(incomeToDelete.accountId, newBalance);
+        }
+      }
+
       setIncome(income.filter((item) => item.id !== id));
     } catch (err) {
       setError('Failed to delete income');
