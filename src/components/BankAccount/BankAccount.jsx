@@ -126,18 +126,19 @@ const BankAccount = () => {
                     top: 8,
                     right: 8,
                     display: 'flex',
-                    gap: 1,
+                    gap: 0.5,
+                    zIndex: 10,
                   }}
                 >
-                  <IconButton size="small" onClick={() => handleEditClick(account)} color="primary">
+                  <IconButton size="small" onClick={() => handleEditClick(account)} color="primary" sx={{ p: 0.5 }}>
                     <EditIcon fontSize="small" />
                   </IconButton>
-                  <IconButton size="small" onClick={() => handleDelete(account.id)} color="error">
+                  <IconButton size="small" onClick={() => handleDelete(account.id)} color="error" sx={{ p: 0.5 }}>
                     <DeleteIcon fontSize="small" />
                   </IconButton>
                 </Box>
 
-                <CardContent>
+                <CardContent sx={{ pt: 5 }}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
                     <Box>
                       <Typography variant="h6" sx={{ fontWeight: 700 }}>
