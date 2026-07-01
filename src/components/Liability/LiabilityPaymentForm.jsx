@@ -15,6 +15,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { useBankAccounts } from '../../context/BankAccountsContext';
 import { useNotifications } from '../../context/NotificationsContext';
+import { ensureDate } from '../../utils/dateHelpers';
 import { addLiabilityPayment, updateLiability } from '../../utils/firebaseHelpers';
 
 const LiabilityPaymentForm = ({ open, onClose, onSuccess, liability }) => {
@@ -83,7 +84,7 @@ const LiabilityPaymentForm = ({ open, onClose, onSuccess, liability }) => {
       await addLiabilityPayment(user.uid, paymentRecord);
 
       // 3. Calculate next EMI due date (add 1 month)
-      const currentDueDate = new Date(liability.emiDueDate);
+      const currentDueDate = ensureDate(liability.emiDueDate) || new Date();
       const nextDueDate = new Date(currentDueDate);
       nextDueDate.setMonth(nextDueDate.getMonth() + 1);
 
