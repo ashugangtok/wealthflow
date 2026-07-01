@@ -112,16 +112,42 @@ const CreditCard = () => {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, gap: 2, flexWrap: 'wrap' }}>
         <Box>
-          <Typography variant="h4" gutterBottom>
+          <Typography variant="h4" gutterBottom sx={{ fontWeight: 700 }}>
             Credit Cards
           </Typography>
-          <Typography variant="body2" color="textSecondary">
-            Total Outstanding: {formatCurrency(totalOutstanding)} | Total Credit Limit: {formatCurrency(totalLimit)} | Overall Utilization: {overallUtilization}%
-          </Typography>
+          <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
+            <Typography variant="body2" color="textSecondary">
+              Outstanding: <Typography component="span" sx={{ fontWeight: 700, color: '#ef4444' }}>{formatCurrency(totalOutstanding)}</Typography>
+            </Typography>
+            <Typography variant="body2" color="textSecondary">
+              Limit: <Typography component="span" sx={{ fontWeight: 700, color: '#10b981' }}>{formatCurrency(totalLimit)}</Typography>
+            </Typography>
+            <Typography variant="body2" color="textSecondary">
+              Utilization: <Typography component="span" sx={{ fontWeight: 700, color: overallUtilization > 80 ? '#ef4444' : overallUtilization > 50 ? '#f59e0b' : '#10b981' }}>{overallUtilization}%</Typography>
+            </Typography>
+          </Box>
         </Box>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={handleAddClick}>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={handleAddClick}
+          sx={{
+            background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
+            color: 'white',
+            fontWeight: 600,
+            px: 3,
+            py: 1.2,
+            '&:hover': {
+              background: 'linear-gradient(135deg, #0891b2 0%, #0369a1 100%)',
+              transform: 'translateY(-2px)',
+              boxShadow: '0 8px 16px rgba(6, 182, 212, 0.3)',
+            },
+            transition: 'all 0.3s ease',
+          }}
+          aria-label="Add a new credit card"
+        >
           Add Card
         </Button>
       </Box>
@@ -129,8 +155,33 @@ const CreditCard = () => {
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
       {cards.length === 0 ? (
-        <Card sx={{ p: 3, textAlign: 'center' }}>
-          <Typography color="textSecondary">No credit cards yet. Click "Add Card" to get started.</Typography>
+        <Card
+          sx={{
+            p: 6,
+            textAlign: 'center',
+            background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.05) 100%)',
+            border: '2px dashed rgba(239, 68, 68, 0.3)',
+          }}
+        >
+          <Box sx={{ fontSize: 64, mb: 2 }}>💳</Box>
+          <Typography variant="h5" sx={{ fontWeight: 700, mb: 1 }}>
+            No Credit Cards Yet
+          </Typography>
+          <Typography variant="body2" color="textSecondary" sx={{ mb: 3 }}>
+            Add your credit cards to track outstanding balance and manage payments in one place.
+          </Typography>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={handleAddClick}
+            sx={{
+              background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
+              color: 'white',
+              fontWeight: 600,
+            }}
+          >
+            Add Your First Card
+          </Button>
         </Card>
       ) : (
         <Grid container spacing={3}>
@@ -140,35 +191,54 @@ const CreditCard = () => {
 
             return (
               <Grid item xs={12} sm={6} md={4} lg={3} key={card.id}>
-                <Card sx={{ position: 'relative', height: '100%', maxHeight: '300px' }}>
+                <Card
+                  sx={{
+                    position: 'relative',
+                    height: '100%',
+                    maxHeight: '320px',
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      transform: 'translateY(-4px)',
+                      boxShadow: '0 12px 24px rgba(0, 0, 0, 0.3)',
+                    },
+                  }}
+                >
                   <Box
                     sx={{
                       position: 'absolute',
                       top: 8,
                       right: 8,
                       display: 'flex',
-                      gap: 1,
+                      gap: 0.5,
+                      zIndex: 10,
                     }}
                   >
-                    <IconButton size="small" onClick={() => handleEditClick(card)} color="primary">
+                    <IconButton size="small" onClick={() => handleEditClick(card)} color="primary" sx={{ p: 0.5 }} aria-label="Edit credit card">
                       <EditIcon fontSize="small" />
                     </IconButton>
-                    <IconButton size="small" onClick={() => handleDelete(card.id)} color="error">
+                    <IconButton size="small" onClick={() => handleDelete(card.id)} color="error" sx={{ p: 0.5 }} aria-label="Delete credit card">
                       <DeleteIcon fontSize="small" />
                     </IconButton>
                   </Box>
 
-                  <CardContent sx={{ p: 2 }}>
-                    <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1.5 }}>
-                      {card.cardName}
-                    </Typography>
+                  <CardContent sx={{ p: 2, pt: 3 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 1.5 }}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                        {card.cardName}
+                      </Typography>
+                      {utilization > 80 && (
+                        <Box sx={{ backgroundColor: '#ef4444', color: 'white', px: 1, py: 0.5, borderRadius: '4px', fontSize: '0.65rem', fontWeight: 600 }}>
+                          High Usage
+                        </Box>
+                      )}
+                    </Box>
 
                     <Box sx={{ mb: 1.5 }}>
                       <Typography variant="caption" color="textSecondary">
                         Card Number
                       </Typography>
-                      <Typography variant="caption" sx={{ fontWeight: 600, display: 'block' }}>
-                        {card.cardNumber || '****'}
+                      <Typography variant="caption" sx={{ fontWeight: 600, display: 'block', letterSpacing: '1px' }} title="Card number is masked for security">
+                        {card.cardNumber || '••••'}
                       </Typography>
                     </Box>
 

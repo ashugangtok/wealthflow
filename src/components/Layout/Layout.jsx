@@ -147,18 +147,25 @@ const Layout = () => {
               navigate(item.path);
               setMobileOpen(false);
             }}
+            aria-label={`Navigate to ${item.label}`}
             sx={{
               px: 2,
               py: 1.5,
               my: 0.5,
               mx: 1,
+              height: 48,
               borderRadius: '12px',
               color: 'rgba(255, 255, 255, 0.7)',
               '&:hover': {
                 backgroundColor: 'rgba(124, 58, 237, 0.2)',
                 color: 'white',
+                transform: 'translateX(4px)',
               },
-              transition: 'all 0.3s ease',
+              '&:focus-visible': {
+                outline: '2px solid #7C3AED',
+                outlineOffset: '2px',
+              },
+              transition: 'all 0.2s ease',
             }}
           >
             <ListItemIcon sx={{ color: 'inherit', minWidth: 40 }}>
@@ -189,12 +196,16 @@ const Layout = () => {
             edge="start"
             onClick={() => setMobileOpen(!mobileOpen)}
             sx={{ mr: 2, display: { sm: 'none' } }}
+            aria-label="open navigation menu"
           >
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" sx={{ flex: 1, fontWeight: 700 }}>
-            WEALTHFLOW
-          </Typography>
+          {/* Mobile: Show logo icon, Desktop: Hide (sidebar branding shows) */}
+          <Box sx={{ display: { xs: 'flex', sm: 'none' }, alignItems: 'center', gap: 1, flex: 1 }}>
+            <Wallet sx={{ fontSize: 24 }} />
+            <Typography variant="h6" sx={{ fontWeight: 700 }}>WEALTHFLOW</Typography>
+          </Box>
+          <Box sx={{ display: { xs: 'none', sm: 'flex' }, flex: 1 }} />
 
           {/* Notification Bell */}
           <IconButton color="inherit" onClick={handleNotificationOpen}>
