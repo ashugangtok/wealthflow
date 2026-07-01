@@ -22,15 +22,20 @@ import {
   Tab,
 } from '@mui/material';
 import { Edit, Delete, Add } from '@mui/icons-material';
+import { useAuth } from '../../context/AuthContext';
 import { useBills } from '../../context/BillsContext';
 import { useNotifications } from '../../context/NotificationsContext';
 import { ensureDate } from '../../utils/dateHelpers';
+import { getAllLiabilityPayments } from '../../utils/firebaseHelpers';
+import { formatCurrency } from '../../utils/calculations';
 import BillsForm from './BillsForm';
 import BillPaymentForm from './BillPaymentForm';
 
 const Bills = () => {
+  const { user } = useAuth();
   const { bills, deleteBillItem, fetchBills } = useBills();
   const { addNotification } = useNotifications();
+  const [liabilityPayments, setLiabilityPayments] = useState([]);
   const [openForm, setOpenForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [editingData, setEditingData] = useState(null);
@@ -42,8 +47,20 @@ const Bills = () => {
 
   useEffect(() => {
     fetchBills();
+    if (user) {
+      fetchLiabilityPayments();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [user]);
+
+  const fetchLiabilityPayments = async () => {
+    try {
+      const payments = await getAllLiabilityPayments(user.uid);
+      setLiabilityPayments(payments);
+    } catch (err) {
+      console.error('Failed to load liability payments:', err);
+    }
+  };
 
   const handleAddClick = () => {
     setEditingId(null);
@@ -285,24 +302,26 @@ const Bills = () => {
             </TableContainer>
           )}
 
-          {/* Paid Bills Tab */}
+          {/* Paid Bills Tab - Shows both past bills and EMI payments */}
           {activeTab === 1 && (
             <TableContainer>
-              {pastBills.length > 0 ? (
+              {pastBills.length > 0 || liabilityPayments.length > 0 ? (
                 <Table>
                   <TableHead>
                     <TableRow sx={{ background: 'rgba(102, 126, 234, 0.1)' }}>
-                      <TableCell sx={{ color: 'rgba(255, 255, 255, 0.8)', fontWeight: 600 }}>Bill Name</TableCell>
-                      <TableCell sx={{ color: 'rgba(255, 255, 255, 0.8)', fontWeight: 600 }}>Category</TableCell>
+                      <TableCell sx={{ color: 'rgba(255, 255, 255, 0.8)', fontWeight: 600 }}>Name</TableCell>
+                      <TableCell sx={{ color: 'rgba(255, 255, 255, 0.8)', fontWeight: 600 }}>Type</TableCell>
                       <TableCell align="right" sx={{ color: 'rgba(255, 255, 255, 0.8)', fontWeight: 600 }}>Amount</TableCell>
-                      <TableCell sx={{ color: 'rgba(255, 255, 255, 0.8)', fontWeight: 600 }}>Due Date</TableCell>
+                      <TableCell sx={{ color: 'rgba(255, 255, 255, 0.8)', fontWeight: 600 }}>Date</TableCell>
+                      <TableCell sx={{ color: 'rgba(255, 255, 255, 0.8)', fontWeight: 600 }}>Account</TableCell>
                       <TableCell align="center" sx={{ color: 'rgba(255, 255, 255, 0.8)', fontWeight: 600 }}>Actions</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
+                    {/* Past Bills */}
                     {pastBills.map((bill) => (
                       <TableRow
-                        key={bill.id}
+                        key={`bill-${bill.id}`}
                         sx={{
                           '&:hover': { background: 'rgba(102, 126, 234, 0.05)' },
                           borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
@@ -311,16 +330,13 @@ const Bills = () => {
                       >
                         <TableCell sx={{ color: 'white' }}>{bill.billName}</TableCell>
                         <TableCell>
-                          <Chip
-                            label={bill.category}
-                            size="small"
-                            sx={{ background: 'rgba(102, 126, 234, 0.2)', color: '#667eea', fontWeight: 500 }}
-                          />
+                          <Chip label="Bill" size="small" sx={{ background: 'rgba(102, 126, 234, 0.2)', color: '#667eea' }} />
                         </TableCell>
                         <TableCell align="right" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
                           ₹{(bill.amount || 0).toLocaleString('en-IN')}
                         </TableCell>
                         <TableCell sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>{formatDate(bill.billDate)}</TableCell>
+                        <TableCell sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>-</TableCell>
                         <TableCell align="center">
                           <IconButton
                             size="small"
@@ -332,11 +348,42 @@ const Bills = () => {
                         </TableCell>
                       </TableRow>
                     ))}
+
+                    {/* EMI Payments */}
+                    {liabilityPayments.map((payment) => {
+                      const paymentDate = ensureDate(payment.paymentDate);
+                      return (
+                        <TableRow
+                          key={`payment-${payment.id}`}
+                          sx={{
+                            '&:hover': { background: 'rgba(17, 153, 142, 0.05)' },
+                            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                          }}
+                        >
+                          <TableCell sx={{ color: 'white' }}>{payment.liabilityName}</TableCell>
+                          <TableCell>
+                            <Chip label="EMI" size="small" sx={{ background: 'rgba(17, 153, 142, 0.2)', color: '#11998e' }} />
+                          </TableCell>
+                          <TableCell align="right" sx={{ color: '#38ef7d', fontWeight: 700 }}>
+                            {formatCurrency(payment.amount)}
+                          </TableCell>
+                          <TableCell sx={{ color: 'white' }}>
+                            {paymentDate ? paymentDate.toLocaleDateString() : 'N/A'}
+                          </TableCell>
+                          <TableCell sx={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.9rem' }}>
+                            {payment.accountName}
+                          </TableCell>
+                          <TableCell align="center">
+                            <Chip label="✓ Paid" size="small" sx={{ background: 'rgba(16, 185, 129, 0.2)', color: '#10b981' }} />
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               ) : (
                 <Box sx={{ p: 4, textAlign: 'center' }}>
-                  <Typography sx={{ color: 'rgba(255, 255, 255, 0.6)' }}>No paid bills yet</Typography>
+                  <Typography sx={{ color: 'rgba(255, 255, 255, 0.6)' }}>No paid bills or EMI payments yet</Typography>
                 </Box>
               )}
             </TableContainer>
