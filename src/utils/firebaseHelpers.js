@@ -223,6 +223,34 @@ export const getAllLiabilities = async (userId) => {
   return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 };
 
+// Liability Payment records
+export const addLiabilityPayment = async (userId, paymentData) => {
+  return addDoc(collection(db, 'users', userId, 'liabilityPayments'), {
+    ...paymentData,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  });
+};
+
+export const getAllLiabilityPayments = async (userId) => {
+  try {
+    const q = query(
+      collection(db, 'users', userId, 'liabilityPayments'),
+      orderBy('paymentDate', 'desc')
+    );
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+  } catch (error) {
+    const snapshot = await getDocs(collection(db, 'users', userId, 'liabilityPayments'));
+    const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    return data.sort((a, b) => {
+      const dateA = a.paymentDate instanceof Date ? a.paymentDate : new Date(a.paymentDate);
+      const dateB = b.paymentDate instanceof Date ? b.paymentDate : new Date(b.paymentDate);
+      return dateB - dateA;
+    });
+  }
+};
+
 // Budget operations
 export const addBudget = async (userId, budgetData) => {
   return addDoc(collection(db, 'users', userId, 'budgets'), {

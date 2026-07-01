@@ -12,10 +12,13 @@ import {
   CircularProgress,
   Typography,
 } from '@mui/material';
+import { useAuth } from '../../context/AuthContext';
 import { useBankAccounts } from '../../context/BankAccountsContext';
 import { useNotifications } from '../../context/NotificationsContext';
+import { addLiabilityPayment, updateLiability } from '../../utils/firebaseHelpers';
 
 const LiabilityPaymentForm = ({ open, onClose, onSuccess, liability }) => {
+  const { user } = useAuth();
   const { accounts, updateAccountBalance } = useBankAccounts();
   const { addNotification } = useNotifications();
   const [formData, setFormData] = useState({
@@ -61,13 +64,38 @@ const LiabilityPaymentForm = ({ open, onClose, onSuccess, liability }) => {
         return;
       }
 
-      // Deduct from bank account
+      // 1. Deduct from bank account
       const newBalance = selectedAccount.balance - amount;
       await updateAccountBalance(formData.accountId, newBalance);
 
-      // Record payment (you can add this to Firestore later)
+      // 2. Save payment record to Firestore
+      const paymentRecord = {
+        liabilityId: liability.id,
+        liabilityName: liability.loanName,
+        liabilityType: liability.liabilityType,
+        amount: amount,
+        accountId: formData.accountId,
+        accountName: selectedAccount.name || selectedAccount.accountName,
+        paymentDate: new Date(formData.paymentDate),
+        notes: formData.notes,
+        status: 'completed',
+      };
+      await addLiabilityPayment(user.uid, paymentRecord);
+
+      // 3. Calculate next EMI due date (add 1 month)
+      const currentDueDate = new Date(liability.emiDueDate);
+      const nextDueDate = new Date(currentDueDate);
+      nextDueDate.setMonth(nextDueDate.getMonth() + 1);
+
+      // 4. Update liability with new due date and reduced outstanding amount
+      const updatedOutstanding = Math.max(0, (liability.outstandingAmount || 0) - amount);
+      await updateLiability(user.uid, liability.id, {
+        emiDueDate: nextDueDate,
+        outstandingAmount: updatedOutstanding,
+      });
+
       addNotification(
-        `EMI Payment of ₹${amount.toLocaleString()} recorded from ${selectedAccount.name}`,
+        `✅ EMI Payment of ₹${amount.toLocaleString()} recorded. Next EMI due: ${nextDueDate.toLocaleDateString()}`,
         'success',
         4000
       );
