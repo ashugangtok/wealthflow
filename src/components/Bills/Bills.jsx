@@ -22,6 +22,7 @@ import {
   Tab,
 } from '@mui/material';
 import { Edit, Delete, Add } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useBills } from '../../context/BillsContext';
 import { useCreditCards } from '../../context/CreditCardsContext';
@@ -33,6 +34,7 @@ import BillsForm from './BillsForm';
 import BillPaymentForm from './BillPaymentForm';
 
 const Bills = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { bills, deleteBillItem, fetchBills } = useBills();
   const { cards } = useCreditCards();
@@ -378,8 +380,23 @@ const Bills = () => {
                               </IconButton>
                             </>
                           )}
-                          {(bill.type === 'creditCard' || bill.type === 'emi') && (
-                            <Chip label="View Details" size="small" sx={{ background: 'rgba(102, 126, 234, 0.2)', color: '#667eea' }} />
+                          {bill.type === 'creditCard' && (
+                            <Button
+                              size="small"
+                              onClick={() => navigate('/credit-cards')}
+                              sx={{ textTransform: 'none', color: '#667eea' }}
+                            >
+                              View Details
+                            </Button>
+                          )}
+                          {bill.type === 'emi' && (
+                            <Button
+                              size="small"
+                              onClick={() => navigate('/liabilities')}
+                              sx={{ textTransform: 'none', color: '#667eea' }}
+                            >
+                              View Details
+                            </Button>
                           )}
                         </TableCell>
                       </TableRow>
