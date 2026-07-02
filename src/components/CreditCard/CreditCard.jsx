@@ -108,6 +108,7 @@ const CreditCard = () => {
 
   const totalOutstanding = cards.reduce((sum, card) => sum + (card.outstandingBalance || 0), 0);
   const totalLimit = cards.reduce((sum, card) => sum + (card.limitAmount || 0), 0);
+  const totalAvailableCredit = totalLimit - totalOutstanding;
   const overallUtilization = totalLimit > 0 ? ((totalOutstanding / totalLimit) * 100).toFixed(2) : 0;
 
   return (
@@ -123,6 +124,9 @@ const CreditCard = () => {
             </Typography>
             <Typography variant="body2" color="textSecondary">
               Limit: <Typography component="span" sx={{ fontWeight: 700, color: '#10b981' }}>{formatCurrency(totalLimit)}</Typography>
+            </Typography>
+            <Typography variant="body2" color="textSecondary">
+              Available: <Typography component="span" sx={{ fontWeight: 700, color: '#06b6d4' }}>{formatCurrency(totalAvailableCredit)}</Typography>
             </Typography>
             <Typography variant="body2" color="textSecondary">
               Utilization: <Typography component="span" sx={{ fontWeight: 700, color: overallUtilization > 80 ? '#ef4444' : overallUtilization > 50 ? '#f59e0b' : '#10b981' }}>{overallUtilization}%</Typography>

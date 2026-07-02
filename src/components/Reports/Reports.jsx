@@ -9,7 +9,6 @@ import {
   Tabs,
   Typography,
   CircularProgress,
-  Alert,
 } from '@mui/material';
 import {
   LineChart,
@@ -40,7 +39,6 @@ const TabPanel = ({ children, value, index }) => (
 const Reports = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [tabValue, setTabValue] = useState(0);
   const [data, setData] = useState({
     incomeTrend: [],
@@ -62,56 +60,60 @@ const Reports = () => {
 
     try {
       setLoading(true);
-      setError('');
 
       const [income, expenses, assets, liabilities, creditCards, bankAccounts] = await Promise.all([
-        getAllIncome(user.uid),
-        getAllExpenses(user.uid),
-        getAllAssets(user.uid),
-        getAllLiabilities(user.uid),
-        getAllCreditCards(user.uid),
-        getAllBankAccounts(user.uid),
+        getAllIncome(user.uid).catch(() => []),
+        getAllExpenses(user.uid).catch(() => []),
+        getAllAssets(user.uid).catch(() => []),
+        getAllLiabilities(user.uid).catch(() => []),
+        getAllCreditCards(user.uid).catch(() => []),
+        getAllBankAccounts(user.uid).catch(() => []),
       ]);
 
-      // Filter out invalid dates
-      const validIncome = income.filter(item => {
-        const date = ensureDate(item.date);
-        return date && !isNaN(date);
-      });
-      const validExpenses = expenses.filter(item => {
+      const validIncome = (income || []).filter(item => {
         const date = ensureDate(item.date);
         return date && !isNaN(date);
       });
 
-      // Calculate trends
-      const incomeTrend = calculateMonthlyTrend(validIncome, 12);
-      const expenseTrend = calculateMonthlyTrend(validExpenses, 12);
-
-      // Calculate net worth trend
-      const netWorthTrend = incomeTrend.map((month, index) => {
-        const totalIncome = incomeTrend.slice(0, index + 1).reduce((sum, m) => sum + m.value, 0);
-        const totalExpenses = expenseTrend.slice(0, index + 1).reduce((sum, m) => sum + m.value, 0);
-        const monthAssets = assets.filter((asset) => {
-          if (!asset.purchaseDate) return false;
-          const assetDate = asset.purchaseDate instanceof Date ? asset.purchaseDate : new Date(asset.purchaseDate);
-          const assetMonth = new Date(month.year, month.monthNum - 1);
-          return assetDate <= assetMonth;
-        }).reduce((sum, a) => sum + (a.currentValue || 0), 0);
-
-        const totalBankBalance = bankAccounts.reduce((sum, acc) => sum + (acc.balance || 0), 0);
-        const monthAssetValue = monthAssets + totalBankBalance;
-        const monthLiabilities = liabilities.reduce((sum, l) => sum + (l.outstandingAmount || 0), 0);
-        const ccOutstanding = creditCards.reduce((sum, c) => sum + (c.outstandingBalance || 0), 0);
-
-        return {
-          month: month.month,
-          value: monthAssetValue + (totalIncome - totalExpenses) - monthLiabilities - ccOutstanding,
-        };
+      const validExpenses = (expenses || []).filter(item => {
+        const date = ensureDate(item.date);
+        return date && !isNaN(date);
       });
 
-      // Category data
-      const expenseByCategory = getExpensesByCategory(validExpenses);
-      const incomeByCategory = getIncomeByCategory(validIncome);
+      let incomeTrend = [];
+      let expenseTrend = [];
+      let netWorthTrend = [];
+
+      if (validIncome.length > 0 || validExpenses.length > 0) {
+        incomeTrend = validIncome.length > 0 ? calculateMonthlyTrend(validIncome, 12) : [];
+        expenseTrend = validExpenses.length > 0 ? calculateMonthlyTrend(validExpenses, 12) : [];
+
+        if (incomeTrend.length > 0) {
+          netWorthTrend = incomeTrend.map((month, index) => {
+            const totalIncome = incomeTrend.slice(0, index + 1).reduce((sum, m) => sum + m.value, 0);
+            const totalExpenses = expenseTrend.slice(0, index + 1).reduce((sum, m) => sum + m.value, 0);
+            const monthAssets = (assets || []).filter((asset) => {
+              if (!asset.purchaseDate) return false;
+              const assetDate = asset.purchaseDate instanceof Date ? asset.purchaseDate : new Date(asset.purchaseDate);
+              const assetMonth = new Date(month.year, month.monthNum - 1);
+              return assetDate <= assetMonth;
+            }).reduce((sum, a) => sum + (a.currentValue || 0), 0);
+
+            const totalBankBalance = (bankAccounts || []).reduce((sum, acc) => sum + (acc.balance || 0), 0);
+            const monthAssetValue = monthAssets + totalBankBalance;
+            const monthLiabilities = (liabilities || []).reduce((sum, l) => sum + (l.outstandingAmount || 0), 0);
+            const ccOutstanding = (creditCards || []).reduce((sum, c) => sum + (c.outstandingBalance || 0), 0);
+
+            return {
+              month: month.month,
+              value: monthAssetValue + (totalIncome - totalExpenses) - monthLiabilities - ccOutstanding,
+            };
+          });
+        }
+      }
+
+      const expenseByCategory = validExpenses.length > 0 ? getExpensesByCategory(validExpenses) : {};
+      const incomeByCategory = validIncome.length > 0 ? getIncomeByCategory(validIncome) : {};
 
       const expensesByCategory = Object.entries(expenseByCategory).map(([name, value]) => ({
         name,
@@ -127,12 +129,18 @@ const Reports = () => {
         incomeTrend,
         expenseTrend,
         netWorthTrend,
-        expensesByCategory: expensesByCategory,
+        expensesByCategory,
         incomeByCategory: incomeByCategories,
       });
     } catch (err) {
-      setError('Failed to load reports');
-      console.error(err);
+      console.error('Reports error:', err);
+      setData({
+        incomeTrend: [],
+        expenseTrend: [],
+        netWorthTrend: [],
+        expensesByCategory: [],
+        incomeByCategory: [],
+      });
     } finally {
       setLoading(false);
     }
@@ -148,11 +156,9 @@ const Reports = () => {
 
   return (
     <Box>
-      <Typography variant="h4" gutterBottom sx={{ mb: 3 }}>
+      <Typography variant="h4" gutterBottom sx={{ mb: 3, fontWeight: 700 }}>
         Financial Reports
       </Typography>
-
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
       <Tabs value={tabValue} onChange={(e, newValue) => setTabValue(newValue)} sx={{ mb: 3 }}>
         <Tab label="Income & Expenses" />
@@ -165,21 +171,27 @@ const Reports = () => {
         <Card>
           <CardHeader title="12-Month Income & Expense Trend" />
           <CardContent>
-            <ResponsiveContainer width="100%" height={400}>
-              <LineChart data={data.incomeTrend.map((item, index) => ({
-                month: item.month,
-                income: item.value,
-                expenses: data.expenseTrend[index]?.value || 0,
-              }))}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Line type="monotone" dataKey="income" stroke="#4caf50" strokeWidth={2} />
-                <Line type="monotone" dataKey="expenses" stroke="#f44336" strokeWidth={2} />
-              </LineChart>
-            </ResponsiveContainer>
+            {data.incomeTrend.length > 0 || data.expenseTrend.length > 0 ? (
+              <ResponsiveContainer width="100%" height={400}>
+                <LineChart data={data.incomeTrend.map((item, index) => ({
+                  month: item.month,
+                  income: item.value,
+                  expenses: data.expenseTrend[index]?.value || 0,
+                }))}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Line type="monotone" dataKey="income" stroke="#4caf50" strokeWidth={2} />
+                  <Line type="monotone" dataKey="expenses" stroke="#f44336" strokeWidth={2} />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <Box sx={{ py: 6, textAlign: 'center' }}>
+                <Typography color="textSecondary">No income or expense data available yet</Typography>
+              </Box>
+            )}
           </CardContent>
         </Card>
       </TabPanel>
@@ -189,15 +201,21 @@ const Reports = () => {
         <Card>
           <CardHeader title="Net Worth Trend (12 Months)" />
           <CardContent>
-            <ResponsiveContainer width="100%" height={400}>
-              <LineChart data={data.netWorthTrend}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip />
-                <Line type="monotone" dataKey="value" stroke="#1976d2" strokeWidth={2} dot={{ fill: '#1976d2', r: 5 }} />
-              </LineChart>
-            </ResponsiveContainer>
+            {data.netWorthTrend.length > 0 ? (
+              <ResponsiveContainer width="100%" height={400}>
+                <LineChart data={data.netWorthTrend}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip />
+                  <Line type="monotone" dataKey="value" stroke="#1976d2" strokeWidth={2} dot={{ fill: '#1976d2', r: 5 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <Box sx={{ py: 6, textAlign: 'center' }}>
+                <Typography color="textSecondary">Not enough data to calculate net worth trend</Typography>
+              </Box>
+            )}
           </CardContent>
         </Card>
       </TabPanel>
@@ -218,7 +236,7 @@ const Reports = () => {
                         cx="50%"
                         cy="50%"
                         labelLine={false}
-                        label={({ name, value }) => `${name}: ${value}`}
+                        label={({ name, value }) => `${name}: ₹${value.toLocaleString()}`}
                         outerRadius={80}
                         fill="#8884d8"
                         dataKey="value"
@@ -227,11 +245,13 @@ const Reports = () => {
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Pie>
-                      <Tooltip />
+                      <Tooltip formatter={(value) => `₹${value.toLocaleString()}`} />
                     </PieChart>
                   </ResponsiveContainer>
                 ) : (
-                  <Typography color="textSecondary">No expense data available</Typography>
+                  <Box sx={{ py: 6, textAlign: 'center' }}>
+                    <Typography color="textSecondary">No expense data available</Typography>
+                  </Box>
                 )}
               </CardContent>
             </Card>
@@ -250,7 +270,7 @@ const Reports = () => {
                         cx="50%"
                         cy="50%"
                         labelLine={false}
-                        label={({ name, value }) => `${name}: ${value}`}
+                        label={({ name, value }) => `${name}: ₹${value.toLocaleString()}`}
                         outerRadius={80}
                         fill="#8884d8"
                         dataKey="value"
@@ -259,11 +279,13 @@ const Reports = () => {
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Pie>
-                      <Tooltip />
+                      <Tooltip formatter={(value) => `₹${value.toLocaleString()}`} />
                     </PieChart>
                   </ResponsiveContainer>
                 ) : (
-                  <Typography color="textSecondary">No income data available</Typography>
+                  <Box sx={{ py: 6, textAlign: 'center' }}>
+                    <Typography color="textSecondary">No income data available</Typography>
+                  </Box>
                 )}
               </CardContent>
             </Card>

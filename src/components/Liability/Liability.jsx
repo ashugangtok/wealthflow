@@ -19,6 +19,7 @@ import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/ico
 import { useAuth } from '../../context/AuthContext';
 import { getAllLiabilities, deleteLiability } from '../../utils/firebaseHelpers';
 import { formatCurrency } from '../../utils/calculations';
+import { ensureDate } from '../../utils/dateHelpers';
 import LiabilityForm from './LiabilityForm';
 import LiabilityPaymentForm from './LiabilityPaymentForm';
 
@@ -150,9 +151,9 @@ const Liability = () => {
             </TableHead>
             <TableBody>
               {liabilities.map((liability) => {
-                const dueDate = liability.emiDueDate instanceof Date ? liability.emiDueDate : new Date(liability.emiDueDate);
+                const dueDate = ensureDate(liability.emiDueDate) || new Date();
                 const today = new Date();
-                const isOverdue = dueDate < today;
+                const isOverdue = dueDate < today && !isNaN(dueDate);
 
                 return (
                   <TableRow key={liability.id} hover>
@@ -166,7 +167,7 @@ const Liability = () => {
                     <TableCell align="right">
                       {formatCurrency(liability.emiAmount || 0)}
                     </TableCell>
-                    <TableCell>{dueDate.toLocaleDateString()}</TableCell>
+                    <TableCell>{!isNaN(dueDate) ? dueDate.toLocaleDateString() : 'Invalid Date'}</TableCell>
                     <TableCell>
                       <Chip
                         label={isOverdue ? 'Overdue' : 'Active'}

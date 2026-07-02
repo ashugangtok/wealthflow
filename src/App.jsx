@@ -29,6 +29,11 @@ import NotificationCenter from './components/Notifications/NotificationCenter.js
 import SavingsGoals from './components/Goals/SavingsGoals.jsx';
 import Bills from './components/Bills/Bills.jsx';
 import LiabilityPayments from './components/Liability/LiabilityPayments.jsx';
+import BankTransfer from './components/Transfer/BankTransfer.jsx';
+import CreditCardTransfer from './components/Transfer/CreditCardTransfer.jsx';
+import StatementUpload from './components/Statements/StatementUpload.jsx';
+// import AICFO from './components/AICFO/AICFO.jsx';
+// import { AICFOProvider } from './context/AICFOContext';
 
 function App() {
   return (
@@ -36,12 +41,12 @@ function App() {
       <AuthProvider>
         <NotificationsProvider>
           <BankAccountsProvider>
-            <CreditCardsProvider>
-              <BudgetsProvider>
-                <GoalsProvider>
-                  <QuickActionsProvider>
-                    <SubscriptionsProvider>
-                      <BillsProvider>
+              <CreditCardsProvider>
+                <BudgetsProvider>
+                  <GoalsProvider>
+                    <QuickActionsProvider>
+                      <SubscriptionsProvider>
+                        <BillsProvider>
                       <Router>
           <Routes>
             {/* Public Routes */}
@@ -73,6 +78,9 @@ function App() {
               <Route path="/alerts" element={<NotificationCenter />} />
               <Route path="/goals" element={<SavingsGoals />} />
               <Route path="/bills" element={<Bills />} />
+              <Route path="/bank-transfers" element={<BankTransfer />} />
+              <Route path="/card-transfers" element={<CreditCardTransfer />} />
+              <Route path="/statements" element={<StatementUpload />} />
             </Route>
 
             {/* Catch all */}

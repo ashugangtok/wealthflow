@@ -83,6 +83,41 @@ const Dashboard = () => {
   const thisMonthSaved = monthlyIncome - monthlyExpenses;
   const recentTransactions = [...data.income, ...data.expenses].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
 
+  // Calculate YTD metrics
+  const currentYear = new Date().getFullYear();
+  const ytdIncome = data.income.filter(t => new Date(t.date).getFullYear() === currentYear).reduce((sum, t) => sum + (t.amount || 0), 0);
+  const ytdExpenses = data.expenses.filter(t => new Date(t.date).getFullYear() === currentYear).reduce((sum, t) => sum + (t.amount || 0), 0);
+  const ytdSavings = ytdIncome - ytdExpenses;
+
+  // Calculate previous month data for comparison
+  const currentDate = new Date();
+  const currentMonth = currentDate.getMonth();
+  const previousMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+  const previousYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+  const prevMonthExpenses = data.expenses.filter(t => {
+    const tDate = new Date(t.date);
+    return tDate.getMonth() === previousMonth && tDate.getFullYear() === previousYear;
+  }).reduce((sum, t) => sum + (t.amount || 0), 0);
+  const expenseChange = prevMonthExpenses > 0 ? ((monthlyExpenses - prevMonthExpenses) / prevMonthExpenses * 100) : 0;
+
+  // Top Merchants by spending
+  const topMerchants = data.expenses
+    .reduce((acc, expense) => {
+      const merchant = expense.merchant || expense.category || 'Other';
+      const existing = acc.find(m => m.merchant === merchant);
+      if (existing) {
+        existing.amount += expense.amount;
+      } else {
+        acc.push({ merchant, amount: expense.amount });
+      }
+      return acc;
+    }, [])
+    .sort((a, b) => b.amount - a.amount)
+    .slice(0, 5);
+
+  // Calculate cash runway (how many months of expenses covered)
+  const cashRunway = monthlyExpenses > 0 ? (totalBankBalance / monthlyExpenses).toFixed(1) : 0;
+
   // Consolidate all upcoming bills from credit cards, liabilities, and bills module
   const getAllUpcomingBills = () => {
     const today = new Date();
@@ -152,6 +187,18 @@ const Dashboard = () => {
 
   const allUpcomingBills = getAllUpcomingBills();
 
+  // Generate alerts
+  const alerts = [];
+  if (monthlyExpenses > monthlyIncome) alerts.push({ type: 'error', msg: 'Spending exceeds income this month' });
+  if (expenseChange > 20) alerts.push({ type: 'warning', msg: `Spending up ${expenseChange.toFixed(0)}% vs last month` });
+  if (cashRunway < 3) alerts.push({ type: 'warning', msg: `Low cash runway: ${cashRunway} months` });
+  data.creditCards.forEach(card => {
+    const utilization = card.limitAmount > 0 ? (card.outstandingBalance / card.limitAmount * 100) : 0;
+    if (utilization > 80) alerts.push({ type: 'warning', msg: `${card.cardName} utilization: ${utilization.toFixed(0)}%` });
+  });
+  const overdueCount = allUpcomingBills.filter(b => b.isOverdue).length;
+  if (overdueCount > 0) alerts.push({ type: 'error', msg: `${overdueCount} bill(s) overdue` });
+
   return (
     <Box sx={{ background: 'linear-gradient(135deg, #0f0f23 0%, #1a1a3e 100%)', minHeight: '100vh', pt: 4 }}>
       {/* Header */}
@@ -166,6 +213,82 @@ const Dashboard = () => {
       <Container maxWidth="lg">
         {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
 
+        {/* Alerts Section */}
+        {alerts.length > 0 && (
+          <Box sx={{ mb: 3, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+            {alerts.map((alert, idx) => (
+              <Alert key={idx} severity={alert.type} sx={{ borderRadius: 2 }}>
+                {alert.msg}
+              </Alert>
+            ))}
+          </Box>
+        )}
+
+        {/* Quick Action Buttons */}
+        <Box sx={{ mb: 4, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+          <Button
+            variant="contained"
+            onClick={() => openModal('income')}
+            sx={{ background: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)', color: 'white', fontWeight: 600 }}
+          >
+            ➕ Add Income
+          </Button>
+          <Button
+            variant="contained"
+            onClick={() => openModal('expense')}
+            sx={{ background: 'linear-gradient(135deg, #f5576c 0%, #f093fb 100%)', color: 'white', fontWeight: 600 }}
+          >
+            ➖ Add Expense
+          </Button>
+          <Button
+            variant="contained"
+            onClick={() => navigate('/bills')}
+            sx={{ background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', color: 'white', fontWeight: 600 }}
+          >
+            💳 Pay Bill
+          </Button>
+          <Button
+            variant="outlined"
+            onClick={() => navigate('/transactions')}
+            sx={{ borderColor: '#667eea', color: '#667eea', fontWeight: 600 }}
+          >
+            📊 View All
+          </Button>
+        </Box>
+
+        {/* Account Summary */}
+        <Card sx={{ mb: 4, borderRadius: 4, boxShadow: '0 10px 40px rgba(0, 0, 0, 0.1)', border: '1px solid rgba(0, 0, 0, 0.05)', animation: 'fadeInUp 0.8s ease-out 0s both' }}>
+          <CardHeader title="🏦 Your Accounts" titleTypographyProps={{ variant: 'h6', fontWeight: 600 }} sx={{ pb: 1, background: 'linear-gradient(135deg, #667eea10 0%, #764ba210 100%)' }} />
+          <CardContent>
+            <Grid container spacing={2}>
+              {data.bankAccounts.length > 0 ? (
+                data.bankAccounts.map((account, idx) => (
+                  <Grid item xs={12} sm={6} md={3} key={idx}>
+                    <Box sx={{ p: 2, background: 'rgba(102, 126, 234, 0.1)', borderRadius: 2, border: '1px solid rgba(102, 126, 234, 0.3)' }}>
+                      <Typography variant="caption" color="textSecondary">{account.accountName || account.name}</Typography>
+                      <Typography variant="h6" sx={{ fontWeight: 700, color: '#667eea', mt: 0.5 }}>
+                        {formatCurrency(account.balance || 0)}
+                      </Typography>
+                    </Box>
+                  </Grid>
+                ))
+              ) : (
+                <Grid item xs={12}>
+                  <Typography color="textSecondary">No accounts yet</Typography>
+                </Grid>
+              )}
+              <Grid item xs={12} sm={6} md={3}>
+                <Box sx={{ p: 2, background: 'rgba(17, 153, 142, 0.1)', borderRadius: 2, border: '1px solid rgba(17, 153, 142, 0.3)' }}>
+                  <Typography variant="caption" color="textSecondary">Total Cash</Typography>
+                  <Typography variant="h6" sx={{ fontWeight: 700, color: '#11998e', mt: 0.5 }}>
+                    {formatCurrency(totalBankBalance)}
+                  </Typography>
+                </Box>
+              </Grid>
+            </Grid>
+          </CardContent>
+        </Card>
+
         {/* Row 1: 5 Metric Cards */}
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)', lg: 'repeat(5, 1fr)' }, gap: 2.5, mb: 4 }}>
           <MetricCardAnimated title="Net Worth" value={formatCurrency(netWorth)} icon={Wallet} gradient={['#667eea', '#764ba2']} index={0} onClick={() => navigate('/bank-accounts')} />
@@ -174,6 +297,80 @@ const Dashboard = () => {
           <MetricCardAnimated title="Credit Card Due" value={formatCurrency(data.creditCards.reduce((sum, c) => sum + (c.outstandingBalance || 0), 0))} icon={CreditCard} gradient={['#f093fb', '#f5576c']} index={3} onClick={() => navigate('/credit-cards')} />
           <MetricCardAnimated title="Monthly Savings" value={formatCurrency(thisMonthSaved)} icon={Savings} gradient={['#fa709a', '#fee140']} index={4} />
         </Box>
+
+        {/* Row 1B: YTD & Comparison Metrics */}
+        <Grid container spacing={3} sx={{ mb: 4 }}>
+          <Grid item xs={12} sm={6} md={3}>
+            <Card sx={{ borderRadius: 4, boxShadow: '0 10px 40px rgba(0, 0, 0, 0.1)', background: 'linear-gradient(135deg, rgba(17, 153, 142, 0.1) 0%, rgba(56, 239, 125, 0.05) 100%)' }}>
+              <CardContent sx={{ textAlign: 'center' }}>
+                <Typography variant="caption" color="textSecondary">YTD Income</Typography>
+                <Typography variant="h6" sx={{ fontWeight: 700, color: '#11998e', mt: 1 }}>
+                  {formatCurrency(ytdIncome)}
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <Card sx={{ borderRadius: 4, boxShadow: '0 10px 40px rgba(0, 0, 0, 0.1)', background: 'linear-gradient(135deg, rgba(245, 87, 108, 0.1) 0%, rgba(240, 147, 251, 0.05) 100%)' }}>
+              <CardContent sx={{ textAlign: 'center' }}>
+                <Typography variant="caption" color="textSecondary">YTD Expenses</Typography>
+                <Typography variant="h6" sx={{ fontWeight: 700, color: '#f5576c', mt: 1 }}>
+                  {formatCurrency(ytdExpenses)}
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <Card sx={{ borderRadius: 4, boxShadow: '0 10px 40px rgba(0, 0, 0, 0.1)', background: 'linear-gradient(135deg, rgba(79, 172, 254, 0.1) 0%, rgba(0, 242, 254, 0.05) 100%)' }}>
+              <CardContent sx={{ textAlign: 'center' }}>
+                <Typography variant="caption" color="textSecondary">YTD Savings</Typography>
+                <Typography variant="h6" sx={{ fontWeight: 700, color: '#4facfe', mt: 1 }}>
+                  {formatCurrency(ytdSavings)}
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <Card sx={{ borderRadius: 4, boxShadow: '0 10px 40px rgba(0, 0, 0, 0.1)', background: 'linear-gradient(135deg, rgba(250, 112, 154, 0.1) 0%, rgba(254, 225, 64, 0.05) 100%)' }}>
+              <CardContent sx={{ textAlign: 'center' }}>
+                <Typography variant="caption" color="textSecondary">Cash Runway</Typography>
+                <Typography variant="h6" sx={{ fontWeight: 700, color: '#fa709a', mt: 1 }}>
+                  {cashRunway} months
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
+
+        {/* Month-over-Month Comparison */}
+        <Card sx={{ mb: 4, borderRadius: 4, boxShadow: '0 10px 40px rgba(0, 0, 0, 0.1)', border: '1px solid rgba(0, 0, 0, 0.05)', animation: 'fadeInUp 0.8s ease-out 0.15s both' }}>
+          <CardHeader title="📈 Month-over-Month Comparison" titleTypographyProps={{ variant: 'h6', fontWeight: 600 }} sx={{ pb: 1, background: 'linear-gradient(135deg, #667eea10 0%, #764ba210 100%)' }} />
+          <CardContent>
+            <Grid container spacing={3}>
+              <Grid item xs={12} sm={6}>
+                <Box>
+                  <Typography variant="caption" color="textSecondary" sx={{ mb: 2, display: 'block' }}>This Month vs Last Month</Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1 }}>
+                    <Typography variant="h6" sx={{ fontWeight: 700 }}>{formatCurrency(monthlyExpenses)}</Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, px: 1, py: 0.5, borderRadius: 1, background: expenseChange > 0 ? 'rgba(245, 87, 108, 0.2)' : 'rgba(17, 153, 142, 0.2)' }}>
+                      <Typography variant="caption" sx={{ fontWeight: 700, color: expenseChange > 0 ? '#f5576c' : '#11998e' }}>
+                        {expenseChange > 0 ? '↑' : '↓'} {Math.abs(expenseChange).toFixed(0)}%
+                      </Typography>
+                    </Box>
+                  </Box>
+                </Box>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Box>
+                  <Typography variant="caption" color="textSecondary" sx={{ mb: 2, display: 'block' }}>Savings Rate</Typography>
+                  <Typography variant="h6" sx={{ fontWeight: 700, color: '#667eea' }}>
+                    {(savingsRate * 100).toFixed(1)}% of income
+                  </Typography>
+                </Box>
+              </Grid>
+            </Grid>
+          </CardContent>
+        </Card>
 
         {/* Row 2: Cash Flow, Income vs Expenses, Net Worth Trend */}
         <Grid container spacing={3} sx={{ mb: 4 }}>
@@ -346,6 +543,40 @@ const Dashboard = () => {
         <Box sx={{ mb: 4 }}>
           <FinancialHealthScore savingsRate={savingsRate} debtToAssets={totalLiabilities > 0 ? totalLiabilities / (totalAssets + totalLiabilities || 1) : 0} emergencyFundMonths={totalBankBalance > 0 && monthlyExpenses > 0 ? totalBankBalance / monthlyExpenses : 0} budgetAdherence={0.8} />
         </Box>
+
+        {/* Row 4B: Top Merchants */}
+        <Card sx={{ mb: 4, borderRadius: 4, boxShadow: '0 10px 40px rgba(0, 0, 0, 0.1)', border: '1px solid rgba(0, 0, 0, 0.05)', animation: 'fadeInUp 0.8s ease-out 0.35s both' }}>
+          <CardHeader title="🏪 Top Merchants" titleTypographyProps={{ variant: 'h6', fontWeight: 600 }} sx={{ pb: 1, background: 'linear-gradient(135deg, #667eea10 0%, #764ba210 100%)' }} />
+          <CardContent>
+            {topMerchants.length > 0 ? (
+              <Stack spacing={2}>
+                {topMerchants.map((merchant, idx) => {
+                  const percentage = monthlyExpenses > 0 ? (merchant.amount / monthlyExpenses) * 100 : 0;
+                  return (
+                    <Box key={idx}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                        <Typography variant="body2" sx={{ color: 'white', fontWeight: 600 }}>{merchant.merchant}</Typography>
+                        <Typography variant="body2" sx={{ color: '#667eea', fontWeight: 700 }}>
+                          {formatCurrency(merchant.amount)}
+                        </Typography>
+                      </Box>
+                      <Box sx={{ width: '100%', height: 6, background: 'rgba(255,255,255,0.1)', borderRadius: 3, overflow: 'hidden' }}>
+                        <Box sx={{ height: '100%', background: `linear-gradient(90deg, #667eea, #764ba2)`, width: `${percentage}%` }} />
+                      </Box>
+                      <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', mt: 0.5, display: 'block' }}>
+                        {percentage.toFixed(0)}% of expenses
+                      </Typography>
+                    </Box>
+                  );
+                })}
+              </Stack>
+            ) : (
+              <Typography sx={{ color: 'rgba(255, 255, 255, 0.6)', textAlign: 'center', py: 4 }}>
+                No merchant data yet
+              </Typography>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Row 5: Top Expenses & Asset Allocation */}
         <Grid container spacing={3} sx={{ mb: 4 }}>

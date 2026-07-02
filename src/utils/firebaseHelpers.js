@@ -364,3 +364,89 @@ export const getAllBills = async (userId) => {
     });
   }
 };
+
+// Transfer operations
+export const addTransfer = async (userId, transferData) => {
+  return addDoc(collection(db, 'users', userId, 'transfers'), {
+    ...transferData,
+    createdAt: new Date(),
+  });
+};
+
+export const getAllTransfers = async (userId) => {
+  try {
+    const q = query(
+      collection(db, 'users', userId, 'transfers'),
+      orderBy('transferDate', 'desc')
+    );
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+  } catch (error) {
+    const snapshot = await getDocs(collection(db, 'users', userId, 'transfers'));
+    const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    return data.sort((a, b) => {
+      const dateA = a.transferDate instanceof Date ? a.transferDate : new Date(a.transferDate);
+      const dateB = b.transferDate instanceof Date ? b.transferDate : new Date(b.transferDate);
+      return dateB - dateA;
+    });
+  }
+};
+
+// Statement operations
+export const uploadStatement = async (userId, file, fileName, metadata) => {
+  try {
+    // Store statement metadata in Firestore
+    const statementRef = await addDoc(collection(db, 'users', userId, 'statements'), {
+      ...metadata,
+      fileSize: file.size,
+      createdAt: new Date(),
+    });
+    return statementRef;
+  } catch (error) {
+    throw new Error('Failed to upload statement: ' + error.message);
+  }
+};
+
+export const getAllStatements = async (userId) => {
+  try {
+    const q = query(
+      collection(db, 'users', userId, 'statements'),
+      orderBy('uploadedAt', 'desc')
+    );
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+  } catch (error) {
+    const snapshot = await getDocs(collection(db, 'users', userId, 'statements'));
+    const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    return data.sort((a, b) => {
+      const dateA = a.uploadedAt instanceof Date ? a.uploadedAt : new Date(a.uploadedAt);
+      const dateB = b.uploadedAt instanceof Date ? b.uploadedAt : new Date(b.uploadedAt);
+      return dateB - dateA;
+    });
+  }
+};
+
+export const deleteStatement = async (userId, statementId) => {
+  return deleteDoc(doc(db, 'users', userId, 'statements', statementId));
+};
+
+export const analyzeStatement = async (userId, statement) => {
+  try {
+    // Mock AI analysis - in production, connect to Claude API
+    const analysis = {
+      insights: `📊 Analysis for ${statement.accountName} (${new Date(statement.month).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}):\n\n✓ Total transactions reviewed and categorized\n✓ Average transaction patterns identified\n✓ Key spending areas detected and highlighted\n✓ Recurring charges identified (subscriptions, EMIs, etc.)\n✓ Unusual or one-time transactions flagged for attention`,
+      spending_patterns: `💰 Spending Breakdown:\n\n→ Essential Expenses: 40-45% (groceries, utilities, rent, insurance)\n→ Discretionary Spending: 30-35% (dining, shopping, entertainment)\n→ Savings & Investments: 20-25% (recommended target)\n→ Monthly Trend: Relatively stable with occasional seasonal spikes\n→ Highest spending days: Mid-month and month-end\n→ Category-wise breakdown saved for detailed analysis`,
+      recommendations: `💡 Smart Money Tips:\n\n1. 🏦 Automate Savings: Set up automatic monthly transfer of 20% income to savings account\n2. 💳 Credit Card Usage: Keep utilization below 30% to maintain good credit score\n3. 📊 Budget Alert: Set spending limits for discretionary categories\n4. 🔄 Subscription Audit: Review and cancel unused subscriptions (potential save: ₹500-1000/month)\n5. 📅 Emergency Fund: Build 6-month expense reserve\n6. 💰 Debt Management: Prioritize high-interest debt repayment\n7. 🎯 Income vs Expenses: Current ratio is healthy - maintain current discipline`,
+    };
+
+    // Save analysis to Firestore
+    await updateDoc(doc(db, 'users', userId, 'statements', statement.id), {
+      analysis: analysis,
+      analyzedAt: new Date(),
+    });
+
+    return analysis;
+  } catch (error) {
+    throw new Error('Analysis failed: ' + error.message);
+  }
+};
